@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Homework_NetCore.Models.db;
+using Microsoft.EntityFrameworkCore;
+using Homework_NetCore.Models.Repositories;
 
 namespace Homework_NetCore
 {
@@ -28,12 +31,16 @@ namespace Homework_NetCore
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            var connection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<CompanyContext>(options => options.UseSqlServer(connection));
+            services.AddTransient<IEmployeeRepository, EmployeeRepository>();
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, CompanyContext context)
         {
+            //loggerFactory.AddProvider(new CustomLoggerProvider(new CustomLoggerConfiguration()));
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
@@ -55,6 +62,8 @@ namespace Homework_NetCore
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            DbInitializer.Initialize(context);
         }
     }
 }
